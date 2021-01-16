@@ -1,8 +1,19 @@
 #!/bin/bash
-# args
-# 1 = manage dns true|false
-# 2 = letsencrypt certs true|false
-# 3 = use mesh
 
-if ($2 == 'true') then
-	echo installing cert-manager
+source project.env
+
+verifyEnvironment()
+createAksCluster()
+
+
+verifyEnvironment() {
+	# check if resource groups exist
+	# check if aks not already exist
+	# azure-verify-environment.sh	
+}
+
+createAksCluster() {
+	az aks create --resource-group $AZURE_AKS_RESOURCE_GROUP --name $AZURE_AKS_NAME --node-count $1 --generate-ssh-keys
+}
+
+

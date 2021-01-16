@@ -1,0 +1,57 @@
+FROM debian:buster-slim
+
+# common tools
+ARG DEBIAN_FRONTEND=noninteractive
+RUN apt update && apt upgrade -y
+RUN apt install gnupg2 curl software-properties-common apt-transport-https git locales vim tmux uuid-runtime  -y
+
+RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && \
+    locale-gen
+ENV LANG en_US.UTF-8  
+ENV LANGUAGE en_US:en  
+ENV LC_ALL en_US.UTF-8  
+
+# Kubectl
+RUN curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add
+RUN apt-add-repository "deb http://apt.kubernetes.io/ kubernetes-xenial main"
+RUN apt update && apt install kubectl  -y
+
+# Azure CLI
+RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
+
+# linkerd2
+RUN curl -sL https://run.linkerd.io/install | sh
+RUN cp ~/.linkerd2/bin/* /usr/local/bin/
+RUN rm -rf ~/.linkerd2
+
+# Velero
+RUN curl -sL https://github.com/vmware-tanzu/velero/releases/download/v1.5.2/velero-v1.5.2-linux-amd64.tar.gz | tar xvz
+RUN mv velero-v1.5.2-linux-amd64/velero /usr/local/bin
+
+# Helm
+RUN curl https://baltocdn.com/helm/signing.asc | apt-key add -
+RUN echo "deb https://baltocdn.com/helm/stable/debian/ all main" | tee /etc/apt/sources.list.d/helm-stable-debian.list
+RUN apt update && apt install helm -y
+
+# OMG ZSH
+RUN apt install zsh -y
+RUN chsh -s $(which zsh)
+RUN curl -sL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh  | ZSH=/opt/oh-my-zsh sh
+RUN git clone https://github.com/jonmosco/kube-ps1.git /opt/kube-ps1
+RUN echo 'autoload -U +X bashcompinit && bashcompinit' >> ~/.zshrc
+RUN echo 'source /etc/bash_completion.d/azure-cli' >> ~/.zshrc
+RUN sed -i -e 's/plugins=(.*)/plugins=(git kubectl)/' ~/.zshrc
+RUN echo 'source /opt/kube-ps1/kube-ps1.sh' >> ~/.zshrc
+RUN echo PROMPT=\''$(kube_ps1) '\'\$PROMPT >> ~/.zshrc
+RUN mv ~/.zshrc /etc/zsh/zshrc
+
+# kubectx
+RUN apt install kubectx -y
+RUN mkdir -p /opt/oh-my-zsh/completions
+RUN chmod -R 755 /opt/oh-my-zsh/completions
+RUN ln -s /usr/share/kubectx/completion/kubectx.zsh /opt/oh-my-zsh/completions/_kubectx.zsh
+RUN ln -s /usr/share/kubectx/completion/kubens.zsh /opt/oh-my-zsh/completions/_kubens.zsh
+
+CMD cd ~ && /bin/zsh
+
+
