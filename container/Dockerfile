@@ -3,7 +3,7 @@ FROM debian:buster-slim
 # common tools
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt update && apt upgrade -y
-RUN apt install gnupg2 curl software-properties-common apt-transport-https git locales vim tmux uuid-runtime  -y
+RUN apt install gnupg2 curl software-properties-common apt-transport-https git locales jq vim tmux uuid-runtime  -y
 
 RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && \
     locale-gen
